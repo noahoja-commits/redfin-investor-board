@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redfin Investor Board</title>
+<style>
+:root,[data-theme="light"]{
+  --bg:#f7f6f2;--surface:#f9f8f5;--s2:#fbfbf9;--soff:#f0ede8;--sdyn:#e6e4df;
+  --border:#d4d1ca;--div:#dcd9d5;
+  --tx:#28251d;--mu:#7a7974;--fa:#bab9b4;
+  --re:#d7263d;--reh:#b81e30;--rebg:#f5d5d9;
+  --te:#01696f;--teh:#0c4e54;--tebg:rgba(1,105,111,.11);
+  --gr:#437a22;--grbg:#d4dfcc;
+  --wa:#964219;--wabg:#ddcfc6;
+  --bl:#006494;--blbg:#c6d8e4;
+  --go:#d19900;--gobg:#e9e0c6;
+  --pu:#7a39bb;--pubg:#dacfde;
+  --sh1:0 1px 2px rgba(40,37,29,.06);
+  --sh2:0 4px 12px rgba(40,37,29,.09);
+  --sh3:0 12px 32px rgba(40,37,29,.13);
+  --r1:.375rem;--r2:.5rem;--r3:.75rem;--rf:9999px;
+  --fn:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --ease:180ms cubic-bezier(.16,1,.3,1);
+}
+[data-theme="dark"]{
+  --bg:#131211;--surface:#1a1918;--s2:#201f1d;--soff:#1d1c1a;--sdyn:#2d2c2a;
+  --border:#393836;--div:#262523;
+  --tx:#cdccca;--mu:#797876;--fa:#5a5957;
+  --re:#ef4460;--reh:#e02040;--rebg:#3a2328;
+  --te:#4f98a3;--teh:#227f8b;--tebg:rgba(79,152,163,.13);
+  --gr:#6daa45;--grbg:#3a4435;
+  --wa:#bb653b;--wabg:#564942;
+  --bl:#5591c7;--blbg:#3a4550;
+  --go:#e8af34;--gobg:#4d4332;
+  --pu:#a86fdf;--pubg:#4e4652;
+  --sh1:0 1px 3px rgba(0,0,0,.3);
+  --sh2:0 4px 14px rgba(0,0,0,.4);
+  --sh3:0 12px 32px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:var(--fn);font-size:13px;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column;line-height:1.4}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+input,select{font:inherit;color:var(--tx);background:var(--soff);border:1px solid var(--border);border-radius:var(--r2);padding:.3rem .55rem;outline:none}
+input:focus,select:focus{border-color:var(--re)}
+table{border-collapse:collapse;width:100%}
+#app{display:flex;height:100vh;overflow:hidden}
+.sb{width:200px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.tb{height:44px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.45rem;padding:0 .9rem;flex-shrink:0}
+.content{flex:1;overflow-y:auto;padding:1rem 1.2rem}
+.sbl{padding:.75rem .9rem .6rem;display:flex;align-items:center;gap:.45rem;border-bottom:1px solid var(--border)}
+.lt{font-size:13px;font-weight:700}
+.ls{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+.ss{padding:.35rem 0}
+.sl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--fa);padding:.3rem .9rem .15rem}
+.ni{display:flex;align-items:center;gap:.45rem;padding:.36rem .9rem;font-size:12.5px;font-weight:500;color:var(--mu);cursor:pointer;transition:background var(--ease),color var(--ease)}
+.ni:hover{background:var(--soff);color:var(--tx)}
+.ni.on{background:var(--rebg);color:var(--re);font-weight:600}
+.ni svg{width:13px;height:13px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sdiv{height:1px;background:var(--div);margin:.3rem .7rem}
+.nb{margin-left:auto;background:var(--re);color:#fff;font-size:9px;font-weight:700;padding:.08rem .32rem;border-radius:var(--rf)}
+.tbt{font-size:13px;font-weight:700;letter-spacing:-.01em}
+.tbs{flex:1}
+.tbb{display:flex;align-items:center;gap:.28rem;padding:.26rem .55rem;border-radius:var(--r2);font-size:12px;font-weight:500;color:var(--mu);border:1px solid var(--border);cursor:pointer;background:transparent;transition:background var(--ease),color var(--ease)}
+.tbb:hover{background:var(--soff);color:var(--tx)}
+.tbb svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.thb{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--r2);color:var(--mu);cursor:pointer;transition:background var(--ease)}
+.thb:hover{background:var(--soff);color:var(--tx)}
+.pg{display:none}.pg.on{display:block}
+.tabs{display:flex;gap:.15rem;border-bottom:1px solid var(--border);margin-bottom:.9rem;overflow-x:auto}
+.tab{padding:.42rem .75rem;font-size:12px;font-weight:600;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color var(--ease),border-color var(--ease)}
+.tab:hover{color:var(--tx)}
+.tab.on{color:var(--re);border-bottom-color:var(--re)}
+.kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem;margin-bottom:.9rem}
+.kp{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:.7rem .85rem;box-shadow:var(--sh1)}
+.kl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:.18rem}
+.kv{font-size:20px;font-weight:700;line-height:1}
+.ks{font-size:10.5px;color:var(--mu);margin-top:.18rem}
+.up{color:var(--gr)}.dn{color:var(--re)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);box-shadow:var(--sh1)}
+.ch{padding:.6rem .85rem;border-bottom:1px solid var(--div);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.ct{font-size:12px;font-weight:700}
+.cb{padding:.7rem .85rem}
+.tw{overflow-x:auto}
+.tbl th{padding:.42rem .65rem;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);border-bottom:1px solid var(--div);background:var(--soff);white-space:nowrap}
+.tbl td{padding:.48rem .65rem;border-bottom:1px solid var(--div);font-size:12px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:var(--soff)}
+.bdg{display:inline-flex;align-items:center;padding:.11rem .38rem;border-radius:var(--rf);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+.br{background:var(--rebg);color:var(--re)}
+.bg{background:var(--grbg);color:var(--gr)}
+.bb{background:var(--blbg);color:var(--bl)}
+.bo{background:var(--gobg);color:var(--go)}
+.bp{background:var(--pubg);color:var(--pu)}
+.bt{background:var(--tebg);color:var(--te)}
+.bw{background:var(--wabg);color:var(--wa)}
+.bgr{background:var(--sdyn);color:var(--mu)}
+.btn{display:inline-flex;align-items:center;gap:.28rem;padding:.32rem .7rem;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer;transition:background var(--ease),color var(--ease)}
+.btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btnr{background:var(--re);color:#fff;border:none}.btnr:hover{background:var(--reh)}
+.btng{background:transparent;color:var(--mu);border:1px solid var(--border)}.btng:hover{background:var(--soff);color:var(--tx)}
+.btnt{background:var(--te);color:#fff;border:none}.btnt:hover{background:var(--teh)}
+.sm{padding:.2rem .5rem;font-size:11px}
+.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.5rem}
+.lc{display:flex;align-items:flex-start;gap:.5rem;padding:.6rem .75rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);cursor:pointer;transition:background var(--ease),box-shadow var(--ease)}
+.lc:hover{background:var(--soff);box-shadow:var(--sh2)}
+.li{width:24px;height:24px;border-radius:var(--r2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+.ln{font-size:12px;font-weight:600;color:var(--tx)}
+.ld{font-size:10.5px;color:var(--mu);margin-top:.1rem}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:.6rem}
+.fgb{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:.7rem .85rem}
+.fgt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin-bottom:.45rem}
+.tgs{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.3rem}
+.tg{padding:.16rem .45rem;border-radius:var(--rf);font-size:10.5px;font-weight:600;background:var(--sdyn);color:var(--mu);cursor:pointer;border:1px solid var(--border);transition:background var(--ease),color var(--ease),border-color var(--ease)}
+.tg:hover,.tg.on{background:var(--rebg);color:var(--re);border-color:var(--re)}
+.fr{display:flex;align-items:center;gap:.38rem;margin-top:.32rem}
+.fr label{font-size:11px;color:var(--mu);white-space:nowrap;min-width:55px}
+.fr input,.fr select{flex:1;font-size:11px}
+.shr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem}
+.sht{font-size:13px;font-weight:700}
+.sha{display:flex;gap:.35rem}
+.mg{margin-bottom:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:.28rem}
+.chip{display:inline-flex;align-items:center;padding:.18rem .5rem;border-radius:var(--rf);font-size:11px;font-weight:600;background:var(--tebg);color:var(--te);cursor:pointer;border:1px solid transparent;transition:background var(--ease),color var(--ease)}
+.chip:hover,.chip.on{background:var(--rebg);color:var(--re)}
+.cout{background:var(--soff);border:1px solid var(--border);border-radius:var(--r2);padding:.45rem .65rem;font-size:12px;font-family:Consolas,monospace;color:var(--te);min-height:32px;word-break:break-all}
+.wg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.6rem}
+.wc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);overflow:hidden}
+.wch{padding:.5rem .75rem;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--div)}
+.wil{padding:.4rem .5rem;display:flex;flex-direction:column;gap:.32rem;min-height:65px}
+.wi{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:.38rem .55rem}
+.wi:hover{border-color:var(--re)}
+.wit{font-weight:600;color:var(--tx);font-size:11.5px}
+.wis{font-size:10.5px;color:var(--mu);margin-top:.1rem}
+.dh{color:var(--gr);font-weight:700}
+.dw{color:var(--go);font-weight:700}
+.dc{color:var(--re);font-weight:700}
+#toast{position:fixed;bottom:1rem;right:1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:.55rem .85rem;font-size:12px;font-weight:500;box-shadow:var(--sh3);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none;z-index:9999;max-width:250px}
+#toast.show{opacity:1;transform:translateY(0)}
+.hidden{display:none!important}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+@media(max-width:700px){.g2{grid-template-columns:1fr}}
+.prow{display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:.5rem}
+.ainote{display:flex;gap:.6rem;align-items:flex-start;padding:.55rem .75rem;background:var(--soff);border-radius:var(--r3);border:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div id="app">
+<aside class="sb">
+  <div class="sbl">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect width="22" height="22" rx="5" fill="#d7263d"/>
+      <path d="M5 17L11 6.5L17 17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="11" cy="6.5" r="1.6" fill="white"/>
+    </svg>
+    <div><div class="lt">Redfin Board</div><div class="ls">Investor OS</div></div>
+  </div>
+  <div class="ss">
+    <div class="sl">Main</div>
+    <div class="ni on" id="ni-d" onclick="nav('d',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard
+    </div>
+    <div class="ni" id="ni-t" onclick="nav('t',this)">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Lead Tracker <span class="nb" id="lbadge">4</span>
+    </div>
+    <div class="ni" id="ni-w" onclick="nav('w',this)">
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Workflow
+    </div>
+    <div class="ni" id="ni-s" onclick="nav('s',this)">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search Builder
+    </div>
+    <div class="ni" id="ni-k" onclick="nav('k',this)">
+      <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Keywords
+    </div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="ss">
+    <div class="sl">Quick Launch</div>
+    <a class="ni" href="https://www.redfin.com" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Redfin Home</a>
+    <a class="ni" href="https://www.redfin.com/early-access" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Early Access &#9889;</a>
+    <a class="ni" href="https://www.redfin.com/state/Florida/foreclosures" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>FL Foreclosures</a>
+    <a class="ni" href="https://www.hudhomestore.gov" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 22h20M3 22V6l9-4 9 4v16M10 22V16h4v6"/></svg>HUD Home Store</a>
+  </div>
+  <div class="sdiv"></div>
+  <div class="ss">
+    <div class="sl">Investor Tools</div>
+    <a class="ni" href="https://www.propstream.com" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>PropStream</a>
+    <a class="ni" href="https://www.batchleads.io" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>BatchLeads</a>
+    <a class="ni" href="https://www.dealmachine.com" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>DealMachine</a>
+    <a class="ni" href="https://www.resimpli.com" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>REsimpli</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="tb">
+    <span class="tbt" id="ptitle">Dashboard</span>
+    <div class="tbs"></div>
+    <button class="tbb" onclick="exportCSV()">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV
+    </button>
+    <a class="tbb" href="https://www.redfin.com" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open Redfin
+    </a>
+    <button class="thb" onclick="toggleTheme()" title="Toggle theme">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="pg on" id="pg-d">
+      <div class="kg">
+        <div class="kp"><div class="kl">Active Leads</div><div class="kv" id="kv-l">4</div><div class="ks up">+2 this week</div></div>
+        <div class="kp"><div class="kl">REO / Bank-Owned</div><div class="kv">2</div><div class="ks">in tracker</div></div>
+        <div class="kp"><div class="kl">Avg DOM</div><div class="kv dn">74</div><div class="ks">days on market</div></div>
+        <div class="kp"><div class="kl">Saved Searches</div><div class="kv">5</div><div class="ks up">alerts on</div></div>
+        <div class="kp"><div class="kl">Price Drops</div><div class="kv dn">2</div><div class="ks">this week</div></div>
+      </div>
+      <div class="g2 mg">
+        <div class="card">
+          <div class="ch"><span class="ct">Quick Launch</span></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:.4rem">
+            <a class="lc" href="https://www.redfin.com/early-access" target="_blank" rel="noopener"><div class="li" style="background:var(--rebg);color:var(--re)">&#9889;</div><div><div class="ln">Early Access</div><div class="ld">Pre-market exclusives</div></div></a>
+            <a class="lc" href="https://www.redfin.com/state/Florida/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--blbg);color:var(--bl)">&#127960;</div><div><div class="ln">FL Foreclosures</div><div class="ld">REO &amp; bank-owned</div></div></a>
+            <a class="lc" href="https://support.redfin.com/hc/en-us/articles/360001432532" target="_blank" rel="noopener"><div class="li" style="background:var(--grbg);color:var(--gr)">&#128276;</div><div><div class="ln">Saved Search Setup</div><div class="ld">Enable instant alerts</div></div></a>
+            <a class="lc" href="https://www.redfin.com/blog/preforeclosure-homes-what-they-are-and-how-to-buy/" target="_blank" rel="noopener"><div class="li" style="background:var(--gobg);color:var(--go)">&#128214;</div><div><div class="ln">Pre-Foreclosure Guide</div><div class="ld">Redfin official how-to</div></div></a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">Daily Checklist</span></div>
+          <div class="cb" id="checklist"></div>
+        </div>
+      </div>
+      <div class="mg">
+        <div class="shr"><span class="sht">DOM Signal Guide</span></div>
+        <div class="card"><div class="tw"><table class="tbl">
+          <thead><tr><th>Days on Market</th><th>Signal</th><th>Strategy</th><th>Offer Position</th></tr></thead>
+          <tbody>
+            <tr><td><span class="dh">1-7 days</span></td><td>Hot - multiple offers</td><td>Move fast, competitive</td><td>At or above ask</td></tr>
+            <tr><td><span class="dw">8-30 days</span></td><td>Active - showing well</td><td>Standard due diligence</td><td>0-3% below ask</td></tr>
+            <tr><td><span class="dw">31-59 days</span></td><td>Cooling - seller noticing</td><td>Request inspection</td><td>3-7% below ask</td></tr>
+            <tr><td><span class="dc">60-90 days</span></td><td>Stale - motivation building</td><td>Problem-solving offer</td><td>7-12% below ask</td></tr>
+            <tr><td><span class="dc">90+ days</span></td><td>Distressed - high motivation</td><td>Cash / quick close</td><td>12-20%+ below ask</td></tr>
+          </tbody>
+        </table></div></div>
+      </div>
+      <div class="mg">
+        <div class="shr"><span class="sht">Foreclosure Types - Redfin Coverage</span></div>
+        <div class="card"><div class="tw"><table class="tbl">
+          <thead><tr><th>Stage</th><th>Description</th><th>On Redfin?</th><th>Risk</th><th>Next Step</th></tr></thead>
+          <tbody>
+            <tr><td><span class="bdg bo">Pre-Foreclosure</span></td><td>Owner defaulted; motivated</td><td><span class="bdg bw">Limited</span></td><td>Medium</td><td>County NOD + PropStream</td></tr>
+            <tr><td><span class="bdg br">Auction</span></td><td>Courthouse steps; cash-only</td><td><span class="bdg bgr">No</span></td><td>High</td><td>County auction sites</td></tr>
+            <tr><td><span class="bdg bb">REO / Bank-Owned</span></td><td>Bank-owned; clean title</td><td><span class="bdg bg">Full</span></td><td>Med-Low</td><td>/state/[state]/foreclosures</td></tr>
+            <tr><td><span class="bdg bt">HUD Home</span></td><td>FHA-backed; owner priority</td><td><span class="bdg bw">Partial</span></td><td>Low</td><td>hudhomestore.gov</td></tr>
+            <tr><td><span class="bdg bp">Short Sale</span></td><td>Sells below owed; slow close</td><td><span class="bdg bg">MLS</span></td><td>Low</td><td>Standard Redfin MLS</td></tr>
+          </tbody>
+        </table></div></div>
+      </div>
+    </div>
+
+    <!-- TRACKER -->
+    <div class="pg" id="pg-t">
+      <div class="shr"><span class="sht">Lead Tracker</span><div class="sha"><button class="btn btnr sm" onclick="addLead()">+ Add Lead</button></div></div>
+      <div class="card mg"><div class="tw"><table class="tbl">
+        <thead><tr><th>Address</th><th>Type</th><th>Price</th><th>DOM</th><th>Status</th><th>Notes</th><th>Link</th><th></th></tr></thead>
+        <tbody id="ltbody"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- WORKFLOW -->
+    <div class="pg" id="pg-w">
+      <div class="shr"><span class="sht">Deal Pipeline</span></div>
+      <div class="wg" id="wfboard"></div>
+      <p style="margin-top:.65rem;font-size:11.5px;color:var(--mu)">Pipeline reflects lead statuses from the Tracker tab.</p>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="pg" id="pg-s">
+      <div class="tabs">
+        <div class="tab on" onclick="stab('sf',this)">Filter Builder</div>
+        <div class="tab" onclick="stab('su',this)">Foreclosure URLs</div>
+        <div class="tab" onclick="stab('sa',this)">Alert Strategy</div>
+        <div class="tab" onclick="stab('sai',this)">AI Prompts</div>
+      </div>
+      <div id="sf">
+        <div class="fg mg">
+          <div class="fgb"><div class="fgt">Listing Type</div><div class="tgs"><span class="tg on" onclick="ttag(this)">Foreclosure</span><span class="tg" onclick="ttag(this)">FSBO</span><span class="tg" onclick="ttag(this)">Coming Soon</span><span class="tg" onclick="ttag(this)">Early Access</span><span class="tg" onclick="ttag(this)">Price Reduced</span></div></div>
+          <div class="fgb"><div class="fgt">Price Range</div><div class="fr"><label>Min $</label><input type="number" id="fmin" placeholder="50000"></div><div class="fr"><label>Max $</label><input type="number" id="fmax" placeholder="400000"></div></div>
+          <div class="fgb"><div class="fgt">Days on Market</div><div class="tgs"><span class="tg" onclick="ttag(this)">1-7</span><span class="tg" onclick="ttag(this)">30+</span><span class="tg on" onclick="ttag(this)">60+</span><span class="tg" onclick="ttag(this)">90+</span></div></div>
+          <div class="fgb"><div class="fgt">Property Type</div><div class="tgs"><span class="tg on" onclick="ttag(this)">Single Family</span><span class="tg" onclick="ttag(this)">Multi-Family</span><span class="tg" onclick="ttag(this)">Condo</span><span class="tg" onclick="ttag(this)">Land</span></div></div>
+          <div class="fgb"><div class="fgt">Beds / Baths</div><div class="fr"><label>Beds</label><select id="fbeds"><option>Any</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option></select></div><div class="fr"><label>Baths</label><select id="fbaths"><option>Any</option><option>1+</option><option>2+</option></select></div></div>
+          <div class="fgb"><div class="fgt">Seller Type</div><div class="tgs"><span class="tg on" onclick="ttag(this)">REO</span><span class="tg on" onclick="ttag(this)">Bank Owned</span><span class="tg" onclick="ttag(this)">Short Sale</span><span class="tg" onclick="ttag(this)">HUD</span><span class="tg" onclick="ttag(this)">Estate Sale</span></div></div>
+        </div>
+        <div class="prow">
+          <div class="fr" style="margin:0"><label style="font-size:11.5px;color:var(--mu)">Zip/City:</label><input type="text" id="floc" placeholder="33701" style="width:100px"></div>
+          <button class="btn btnr" onclick="buildURL()">Build Search URL</button>
+        </div>
+        <div id="urlout" class="cout mg" style="display:none"></div>
+      </div>
+      <div id="su" class="hidden">
+        <div class="lg mg">
+          <a class="lc" href="https://www.redfin.com/state/Florida/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--rebg);color:var(--re)">FL</div><div><div class="ln">Florida</div><div class="ld">/state/Florida/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/Texas/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--gobg);color:var(--go)">TX</div><div><div class="ln">Texas</div><div class="ld">/state/Texas/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/California/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--blbg);color:var(--bl)">CA</div><div><div class="ln">California</div><div class="ld">/state/California/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/New-York/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--pubg);color:var(--pu)">NY</div><div><div class="ln">New York</div><div class="ld">/state/New-York/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/Arizona/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--wabg);color:var(--wa)">AZ</div><div><div class="ln">Arizona</div><div class="ld">/state/Arizona/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/Georgia/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--rebg);color:var(--re)">GA</div><div><div class="ln">Georgia</div><div class="ld">/state/Georgia/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/Colorado/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--grbg);color:var(--gr)">CO</div><div><div class="ln">Colorado</div><div class="ld">/state/Colorado/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/North-Carolina/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--tebg);color:var(--te)">NC</div><div><div class="ln">North Carolina</div><div class="ld">/state/North-Carolina/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/Virginia/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--blbg);color:var(--bl)">VA</div><div><div class="ln">Virginia</div><div class="ld">/state/Virginia/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/Ohio/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--gobg);color:var(--go)">OH</div><div><div class="ln">Ohio</div><div class="ld">/state/Ohio/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/Tennessee/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--wabg);color:var(--wa)">TN</div><div><div class="ln">Tennessee</div><div class="ld">/state/Tennessee/foreclosures</div></div></a>
+          <a class="lc" href="https://www.redfin.com/state/Washington/foreclosures" target="_blank" rel="noopener"><div class="li" style="background:var(--grbg);color:var(--gr)">WA</div><div><div class="ln">Washington</div><div class="ld">/state/Washington/foreclosures</div></div></a>
+        </div>
+        <div class="fgb" style="max-width:450px">
+          <div class="fgt">Custom State URL Builder</div>
+          <div class="fr">
+            <label>State Name</label>
+            <input type="text" id="statein" placeholder="e.g. Michigan">
+            <button class="btn btng sm" onclick="buildState()" style="margin-left:.35rem;white-space:nowrap">Build URL</button>
+          </div>
+          <div id="stateout" class="cout" style="display:none;margin-top:.4rem"></div>
+        </div>
+      </div>
+      <div id="sa" class="hidden">
+        <div class="card mg">
+          <div class="ch"><span class="ct">5-Alert Investor Stack</span><span class="bdg bg">Recommended</span></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:.5rem">
+            <div class="ainote"><span class="bdg br" style="flex-shrink:0;margin-top:2px">1</span><div><strong style="font-size:12.5px">Foreclosure Alert</strong><div style="font-size:11.5px;color:var(--mu);margin-top:.15rem">Target zip /foreclosures URL > Save Search > Instant. New REO within 15 min.</div></div></div>
+            <div class="ainote"><span class="bdg bb" style="flex-shrink:0;margin-top:2px">2</span><div><strong style="font-size:12.5px">FSBO Alert</strong><div style="font-size:11.5px;color:var(--mu);margin-top:.15rem">More Filters > Listing Type > Non-agent listed > Save > Instant. No commission = flexible sellers.</div></div></div>
+            <div class="ainote"><span class="bdg bo" style="flex-shrink:0;margin-top:2px">3</span><div><strong style="font-size:12.5px">Coming Soon Alert</strong><div style="font-size:11.5px;color:var(--mu);margin-top:.15rem">For Sale dropdown > Coming Soon only > Save. Get in before competing investors.</div></div></div>
+            <div class="ainote"><span class="bdg br" style="flex-shrink:0;margin-top:2px">4</span><div><strong style="font-size:12.5px">High DOM + Price Reduced</strong><div style="font-size:11.5px;color:var(--mu);margin-top:.15rem">Target area + price range > filter Price Reduced > sort Most Days on Market > Save.</div></div></div>
+            <div class="ainote"><span class="bdg bt" style="flex-shrink:0;margin-top:2px">5</span><div><strong style="font-size:12.5px">Early Access Alert</strong><div style="font-size:11.5px;color:var(--mu);margin-top:.15rem">redfin.com/early-access > Save Search. Exclusive pre-market, NOT on Zillow or Realtor.com. Launched May 2026.</div></div></div>
+            <div style="font-size:11.5px;color:var(--mu);padding:.45rem .75rem;background:var(--soff);border-radius:var(--r2)">Set all 5 to Instant in Redfin notification settings.</div>
+          </div>
+        </div>
+      </div>
+      <div id="sai" class="hidden">
+        <div class="card mg">
+          <div class="ch"><span class="ct">Redfin AI - Investor Prompts</span><a href="https://www.redfin.com" target="_blank" rel="noopener" class="btn btng sm">Open Redfin</a></div>
+          <div class="cb">
+            <p style="font-size:11.5px;color:var(--mu);margin-bottom:.7rem">Click any prompt to copy it, then paste into Redfin AI chat (launched Nov 2025).</p>
+            <div id="ailist" style="display:flex;flex-direction:column;gap:.4rem"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:.65rem">
+          <div class="ch"><span class="ct">Custom Prompt Builder</span></div>
+          <div class="cb">
+            <div class="fr" style="margin-bottom:.35rem"><label>Type</label><select id="aitype"><option>fixer-upper</option><option>investor special</option><option>as-is</option><option>cash only</option><option>distressed</option></select></div>
+            <div class="fr" style="margin-bottom:.35rem"><label>Max Price</label><input type="text" id="aiprice" placeholder="$300k"></div>
+            <div class="fr" style="margin-bottom:.6rem"><label>Location</label><input type="text" id="ailoc" placeholder="Pinellas County, FL"></div>
+            <button class="btn btnr sm" onclick="buildAI()">Build Prompt</button>
+            <div id="aiout" class="cout mg" style="display:none;margin-top:.5rem"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEYWORDS -->
+    <div class="pg" id="pg-k">
+      <div class="shr"><span class="sht">Listing Keyword Library</span></div>
+      <div class="g2 mg">
+        <div class="card"><div class="ch"><span class="ct">Condition</span></div><div class="cb"><div class="chips" id="kc0"></div></div></div>
+        <div class="card"><div class="ch"><span class="ct">Motivation / Legal</span></div><div class="cb"><div class="chips" id="kc1"></div></div></div>
+        <div class="card"><div class="ch"><span class="ct">Financial Distress</span></div><div class="cb"><div class="chips" id="kc2"></div></div></div>
+        <div class="card"><div class="ch"><span class="ct">Seller Terms</span></div><div class="cb"><div class="chips" id="kc3"></div></div></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">Built Keyword String</span><button class="btn btng sm" onclick="clearKW()">Clear All</button></div>
+        <div class="cb">
+          <div id="kwout" class="cout" style="color:var(--mu)">Click keywords above to build your search string...</div>
+          <div style="display:flex;gap:.4rem;margin-top:.5rem">
+            <button class="btn btnr sm" onclick="copyKW()">Copy String</button>
+            <a href="https://www.redfin.com" target="_blank" rel="noopener" class="btn btnt sm">Open Redfin AI</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+<div id="toast"></div>
+
+<script>
+(function() {
+
+var leads = [
+  {id:1, addr:'1842 Magnolia Ave, Tampa FL 33607', type:'REO', price:'$189,000', dom:94, status:'Analyzing', notes:'Bank-owned, 2 price cuts', link:'https://www.redfin.com/state/Florida/foreclosures'},
+  {id:2, addr:'3301 Oak Ridge Dr, St Pete FL 33711', type:'FSBO', price:'$142,500', dom:61, status:'Offer Prep', notes:'Motivated seller, needs roof', link:'https://www.redfin.com'},
+  {id:3, addr:'908 Bayshore Blvd, Clearwater FL 33756', type:'Price Cut', price:'$229,000', dom:47, status:'Watching', notes:'3rd price reduction this month', link:'https://www.redfin.com'},
+  {id:4, addr:'117 Pine St, Largo FL 33770', type:'Pre-Fore', price:'$175,000', dom:112, status:'Contacted', notes:'Pre-foreclosure, owner responsive', link:'https://www.redfin.com/state/Florida/foreclosures'}
+];
+var nid = 5;
+
+var checks = [
+  'Check Redfin Early Access for new exclusives',
+  'Review FL foreclosure page for new REO',
+  'Check 90+ DOM listings in target zips',
+  'Review price reduction alerts',
+  'Update lead tracker notes',
+  'Run Redfin comps on active leads',
+  'Check PropStream for pre-foreclosure updates'
+];
+var checkDone = {};
+
+var stages = [
+  {label:'New Lead', color:'#5591c7', items:['1842 Magnolia Ave','908 Bayshore Blvd']},
+  {label:'Analyzing', color:'#e8af34', items:['3301 Oak Ridge Dr']},
+  {label:'Offer Prep', color:'#bb653b', items:['117 Pine St']},
+  {label:'Under Contract', color:'#6daa45', items:[]},
+  {label:'Closed / Dead', color:'#797876', items:[]}
+];
+
+var typeBadge = {REO:'bb', FSBO:'bo', 'Price Cut':'br', 'Pre-Fore':'bw', 'Coming Soon':'bt', 'Early Access':'bp', Other:'bgr'};
+var statBadge = {Watching:'bgr', Analyzing:'bb', 'Offer Prep':'bw', Contacted:'bo', 'Under Contract':'bt', Closed:'bg', Dead:'br'};
+
+var kwData = [
+  ['fixer-upper','needs TLC','as-is','investor special','needs repairs','major repairs','work needed','diamond in rough','rehab','handyman special'],
+  ['estate sale','probate','relocation','divorce','motivated seller','must sell','quick close','price reduced','bring all offers','vacant'],
+  ['pre-foreclosure','foreclosure','REO','bank owned','short sale','distressed','lien','auction','bankruptcy','tax delinquent'],
+  ['cash only','cash preferred','quick close preferred','no repairs','sold as-is','investor opportunity','flip potential','below market','priced to sell','owner financing']
+];
+var kwIds = ['kc0','kc1','kc2','kc3'];
+var selKW = [];
+
+var aiPrompts = [
+  {label:'Fixer-Upper Under Budget', p:'Show me fixer-uppers under $300k in [YOUR CITY] that need work and have been listed more than 60 days'},
+  {label:'Investor Special Cash Only', p:'Find investor special cash-only properties in [YOUR ZIP] priced under $200k with major price reductions'},
+  {label:'As-Is Motivated Sellers', p:'Show me as-is homes in [YOUR AREA] listed by motivated sellers needing quick close under $250k'},
+  {label:'High DOM + Price Cuts', p:'Find homes in [YOUR CITY] with the most days on market and multiple price reductions under $400k'},
+  {label:'Estate / Probate Sales', p:'Show me estate sale or probate properties in [YOUR COUNTY] priced below market value'},
+  {label:'Pre-Foreclosure Distressed', p:'Find distressed pre-foreclosure properties in [YOUR AREA] with motivated sellers needing quick close'}
+];
+
+function domClass(d) { return d >= 60 ? 'dc' : (d >= 30 ? 'dw' : 'dh'); }
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
+
+window.nav = function(p, el) {
+  var items = document.querySelectorAll('.ni');
+  for (var i = 0; i < items.length; i++) { items[i].classList.remove('on'); }
+  if (el) el.classList.add('on');
+  var pages = document.querySelectorAll('.pg');
+  for (var j = 0; j < pages.length; j++) { pages[j].classList.remove('on'); }
+  var pg = document.getElementById('pg-' + p);
+  if (pg) pg.classList.add('on');
+  var names = {d:'Dashboard', t:'Lead Tracker', w:'Deal Pipeline', s:'Search Builder', k:'Keyword Library'};
+  document.getElementById('ptitle').textContent = names[p] || p;
+};
+
+window.toggleTheme = function() {
+  var h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+};
+
+function renderChecklist() {
+  var el = document.getElementById('checklist');
+  if (!el) return;
+  var h = '';
+  for (var i = 0; i < checks.length; i++) {
+    var done = checkDone[i] || false;
+    h += '<label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;padding:.22rem 0">';
+    h += '<input type="checkbox" ' + (done ? 'checked' : '') + ' onchange="chk(' + i + ',this)" style="width:12px;height:12px;accent-color:#d7263d;flex-shrink:0">';
+    h += '<span style="font-size:12px;' + (done ? 'color:var(--mu);text-decoration:line-through' : 'color:var(--tx)') + '">' + checks[i] + '</span>';
+    h += '</label>';
+  }
+  el.innerHTML = h;
+}
+
+window.chk = function(i, el) {
+  checkDone[i] = el.checked;
+  renderChecklist();
+};
+
+function renderLeads() {
+  var tbody = document.getElementById('ltbody');
+  if (!tbody) return;
+  var badge = document.getElementById('lbadge');
+  if (badge) badge.textContent = leads.length;
+  var kv = document.getElementById('kv-l');
+  if (kv) kv.textContent = leads.length;
+  var h = '';
+  for (var i = 0; i < leads.length; i++) {
+    var l = leads[i];
+    var tb = typeBadge[l.type] || 'bgr';
+    var sb = statBadge[l.status] || 'bgr';
+    var safeNotes = l.notes.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    h += '<tr>';
+    h += '<td style="font-weight:600;font-size:12px">' + l.addr + '</td>';
+    h += '<td><span class="bdg ' + tb + '">' + l.type + '</span></td>';
+    h += '<td>' + l.price + '</td>';
+    h += '<td><span class="' + domClass(l.dom) + '">' + l.dom + 'd</span></td>';
+    h += '<td><span class="bdg ' + sb + '">' + l.status + '</span></td>';
+    h += '<td><input value="' + safeNotes + '" data-id="' + l.id + '" onchange="noteChg(this)" style="width:130px;font-size:11px;padding:.2rem .38rem;background:transparent;border:1px solid var(--border);border-radius:var(--r1);color:var(--tx)"></td>';
+    h += '<td><a href="' + l.link + '" target="_blank" rel="noopener" class="btn btng sm">View</a></td>';
+    h += '<td><button data-id="' + l.id + '" onclick="rmLead(this)" style="color:var(--mu);font-size:11px;padding:.15rem .32rem">x</button></td>';
+    h += '</tr>';
+  }
+  tbody.innerHTML = h;
+}
+
+window.noteChg = function(el) {
+  var id = parseInt(el.getAttribute('data-id'));
+  for (var i = 0; i < leads.length; i++) {
+    if (leads[i].id === id) { leads[i].notes = el.value; break; }
+  }
+};
+
+window.rmLead = function(btn) {
+  var id = parseInt(btn.getAttribute('data-id'));
+  var next = [];
+  for (var i = 0; i < leads.length; i++) {
+    if (leads[i].id !== id) next.push(leads[i]);
+  }
+  leads = next;
+  renderLeads();
+  toast('Lead removed');
+};
+
+window.addLead = function() {
+  leads.push({id:nid++, addr:'New Address', type:'Other', price:'$0', dom:0, status:'Watching', notes:'', link:'https://www.redfin.com'});
+  renderLeads();
+  toast('Lead added - edit inline');
+};
+
+function renderWorkflow() {
+  var el = document.getElementById('wfboard');
+  if (!el) return;
+  var h = '';
+  for (var i = 0; i < stages.length; i++) {
+    var s = stages[i];
+    h += '<div class="wc">';
+    h += '<div class="wch" style="color:' + s.color + '">' + s.label + ' (' + s.items.length + ')</div>';
+    h += '<div class="wil">';
+    for (var j = 0; j < s.items.length; j++) {
+      h += '<div class="wi"><div class="wit">' + s.items[j] + '</div><div class="wis">' + s.label + '</div></div>';
+    }
+    h += '</div></div>';
+  }
+  el.innerHTML = h;
+}
+
+window.stab = function(name, el) {
+  var tabs = document.querySelectorAll('#pg-s .tab');
+  for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('on'); }
+  if (el) el.classList.add('on');
+  var panels = ['sf', 'su', 'sa', 'sai'];
+  for (var j = 0; j < panels.length; j++) {
+    var p = document.getElementById(panels[j]);
+    if (p) { p.classList[panels[j] === name ? 'remove' : 'add']('hidden'); }
+  }
+};
+
+window.ttag = function(el) { el.classList.toggle('on'); };
+
+window.buildURL = function() {
+  var min = document.getElementById('fmin').value || '';
+  var max = document.getElementById('fmax').value || '';
+  var loc = document.getElementById('floc').value || 'Tampa';
+  var activeTags = document.querySelectorAll('#sf .tg.on');
+  var tags = [];
+  for (var i = 0; i < activeTags.length; i++) { tags.push(activeTags[i].textContent.trim()); }
+  var base = 'https://www.redfin.com/city/30772/FL/' + loc.replace(/\s+/g, '-');
+  if (tags.indexOf('Foreclosure') > -1) base += '/foreclosures';
+  var params = [];
+  if (min) params.push('min_price=' + min);
+  if (max) params.push('max_price=' + max);
+  var url = params.length ? base + '?' + params.join('&') : base;
+  var out = document.getElementById('urlout');
+  out.style.display = 'block';
+  out.textContent = url + (tags.length ? '  |  Filters: ' + tags.join(', ') : '');
+  toast('URL built - copy it above');
+};
+
+window.buildState = function() {
+  var s = document.getElementById('statein').value.trim();
+  if (!s) { toast('Enter a state name first'); return; }
+  var url = 'https://www.redfin.com/state/' + s.replace(/\s+/g, '-') + '/foreclosures';
+  var out = document.getElementById('stateout');
+  out.style.display = 'block';
+  out.textContent = url;
+  toast('URL ready');
+};
+
+function renderAI() {
+  var el = document.getElementById('ailist');
+  if (!el) return;
+  var h = '';
+  for (var i = 0; i < aiPrompts.length; i++) {
+    h += '<div class="aicard" data-idx="' + i + '" onclick="cpAI(this)" style="padding:.55rem .75rem;background:var(--soff);border:1px solid var(--border);border-radius:var(--r3);cursor:pointer">';
+    h += '<div style="font-size:11.5px;font-weight:700;color:var(--tx);margin-bottom:.12rem">' + aiPrompts[i].label + '</div>';
+    h += '<div style="font-size:11px;color:var(--mu);font-style:italic">' + aiPrompts[i].p + '</div>';
+    h += '<div style="font-size:10.5px;color:var(--re);margin-top:.15rem">Click to copy</div>';
+    h += '</div>';
+  }
+  el.innerHTML = h;
+}
+
+window.cpAI = function(el) {
+  var idx = parseInt(el.getAttribute('data-idx'));
+  cpText(aiPrompts[idx].p);
+};
+
+window.buildAI = function() {
+  var t = document.getElementById('aitype').value;
+  var price = document.getElementById('aiprice').value || '$300k';
+  var loc = document.getElementById('ailoc').value || 'my target area';
+  var prompt = 'Show me ' + t + ' properties in ' + loc + ' under ' + price + ' with motivated sellers and high days on market';
+  var out = document.getElementById('aiout');
+  out.style.display = 'block';
+  out.textContent = prompt;
+  toast('Prompt ready - copy it above');
+};
+
+function renderKeywords() {
+  for (var g = 0; g < kwData.length; g++) {
+    var el = document.getElementById(kwIds[g]);
+    if (!el) continue;
+    var h = '';
+    for (var i = 0; i < kwData[g].length; i++) {
+      var w = kwData[g][i];
+      var active = selKW.indexOf(w) > -1;
+      h += '<span class="chip' + (active ? ' on' : '') + '" data-kw="' + w + '" onclick="toggleKW(this)">' + w + '</span>';
+    }
+    el.innerHTML = h;
+  }
+  updateKWout();
+}
+
+window.toggleKW = function(el) {
+  var kw = el.getAttribute('data-kw');
+  var idx = selKW.indexOf(kw);
+  if (idx > -1) { selKW.splice(idx, 1); el.classList.remove('on'); }
+  else { selKW.push(kw); el.classList.add('on'); }
+  updateKWout();
+};
+
+function updateKWout() {
+  var out = document.getElementById('kwout');
+  if (!out) return;
+  if (selKW.length === 0) {
+    out.textContent = 'Click keywords above to build your search string...';
+    out.style.color = 'var(--mu)';
+  } else {
+    out.textContent = selKW.join(' OR ');
+    out.style.color = 'var(--te)';
+  }
+}
+
+window.clearKW = function() { selKW = []; renderKeywords(); };
+window.copyKW = function() {
+  if (!selKW.length) { toast('No keywords selected'); return; }
+  cpText(selKW.join(' OR '));
+};
+
+window.cpText = function(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      function() { toast('Copied to clipboard'); },
+      function() { fallbackCopy(text); }
+    );
+  } else {
+    fallbackCopy(text);
+  }
+};
+
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); toast('Copied'); }
+  catch (e) { toast('Select and copy manually'); }
+  document.body.removeChild(ta);
+}
+
+window.exportCSV = function() {
+  var rows = [['Address','Type','Price','DOM','Status','Notes']];
+  for (var i = 0; i < leads.length; i++) {
+    var l = leads[i];
+    rows.push([l.addr, l.type, l.price, l.dom, l.status, l.notes]);
+  }
+  var lines = [];
+  for (var r = 0; r < rows.length; r++) {
+    var cells = [];
+    for (var c = 0; c < rows[r].length; c++) {
+      cells.push('"' + String(rows[r][c]).replace(/"/g, '""') + '"');
+    }
+    lines.push(cells.join(','));
+  }
+  var csv = lines.join('\n');
+  var blob = new Blob([csv], {type: 'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'redfin-leads.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast('CSV exported');
+};
+
+renderChecklist();
+renderLeads();
+renderWorkflow();
+renderKeywords();
+renderAI();
+
+})();
+</script>
+</body>
+</html>
