@@ -199,6 +199,11 @@ table{border-collapse:collapse;width:100%}
   <div class="tb">
     <span class="tbt" id="ptitle">Dashboard</span>
     <div class="tbs"></div>
+    <span id="saveStatus" style="font-size:11px;font-weight:600;color:var(--mu);margin-right:.4rem"></span>
+    <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="importCSV(this)">
+    <button class="tbb" onclick="document.getElementById('csvFile').click()">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import CSV
+    </button>
     <button class="tbb" onclick="exportCSV()">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV
     </button>
@@ -265,7 +270,7 @@ table{border-collapse:collapse;width:100%}
 
     <!-- TRACKER -->
     <div class="pg" id="pg-t">
-      <div class="shr"><span class="sht">Lead Tracker</span><div class="sha"><button class="btn btnr sm" onclick="addLead()">+ Add Lead</button></div></div>
+      <div class="shr"><span class="sht">Lead Tracker</span><div class="sha"><button class="btn btng sm" onclick="document.getElementById('csvFile').click()">Import CSV</button><button class="btn btng sm" onclick="clearAllLeads()">Clear All</button><button class="btn btnr sm" onclick="addLead()">+ Add Lead</button></div></div>
       <div class="card mg"><div class="tw"><table class="tbl">
         <thead><tr><th>Address</th><th>Type</th><th>Price</th><th>DOM</th><th>Status</th><th>Notes</th><th>Link</th><th></th></tr></thead>
         <tbody id="ltbody"></tbody>
@@ -390,13 +395,46 @@ table{border-collapse:collapse;width:100%}
 <script>
 (function() {
 
-var leads = [
-  {id:1, addr:'1842 Magnolia Ave, Tampa FL 33607', type:'REO', price:'$189,000', dom:94, status:'Analyzing', notes:'Bank-owned, 2 price cuts', link:'https://www.redfin.com/state/Florida/foreclosures'},
-  {id:2, addr:'3301 Oak Ridge Dr, St Pete FL 33711', type:'FSBO', price:'$142,500', dom:61, status:'Offer Prep', notes:'Motivated seller, needs roof', link:'https://www.redfin.com'},
-  {id:3, addr:'908 Bayshore Blvd, Clearwater FL 33756', type:'Price Cut', price:'$229,000', dom:47, status:'Watching', notes:'3rd price reduction this month', link:'https://www.redfin.com'},
-  {id:4, addr:'117 Pine St, Largo FL 33770', type:'Pre-Fore', price:'$175,000', dom:112, status:'Contacted', notes:'Pre-foreclosure, owner responsive', link:'https://www.redfin.com/state/Florida/foreclosures'}
-];
-var nid = 5;
+var LS_PREFIX = 'rib_v1_';
+var LS_LEADS = LS_PREFIX + 'leads';
+var LS_NID = LS_PREFIX + 'nid';
+var LS_CHECKS = LS_PREFIX + 'checkDone';
+var LS_SELKW = LS_PREFIX + 'selKW';
+var LS_THEME = LS_PREFIX + 'theme';
+
+function lsLoad(key, fallback) {
+  try { var v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); }
+  catch (e) { return fallback; }
+}
+function lsSave(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+  catch (e) { return false; }
+}
+
+var leads = lsLoad(LS_LEADS, []);
+var nid = lsLoad(LS_NID, 1);
+if (!Array.isArray(leads)) leads = [];
+
+function persistLeads() {
+  lsSave(LS_LEADS, leads);
+  lsSave(LS_NID, nid);
+  showSaved();
+}
+function showSaved() {
+  var el = document.getElementById('saveStatus');
+  if (!el) return;
+  var d = new Date();
+  var hh = String(d.getHours()).padStart(2, '0');
+  var mm = String(d.getMinutes()).padStart(2, '0');
+  el.textContent = 'Saved ' + hh + ':' + mm;
+  el.style.color = 'var(--gr)';
+}
+function showSaving() {
+  var el = document.getElementById('saveStatus');
+  if (!el) return;
+  el.textContent = 'Unsaved changes - auto-saving';
+  el.style.color = 'var(--go)';
+}
 
 var checks = [
   'Check Redfin Early Access for new exclusives',
@@ -407,14 +445,15 @@ var checks = [
   'Run Redfin comps on active leads',
   'Check PropStream for pre-foreclosure updates'
 ];
-var checkDone = {};
+var checkDone = lsLoad(LS_CHECKS, {});
+if (typeof checkDone !== 'object' || checkDone === null) checkDone = {};
 
 var stages = [
-  {label:'New Lead', color:'#5591c7', items:['1842 Magnolia Ave','908 Bayshore Blvd']},
-  {label:'Analyzing', color:'#e8af34', items:['3301 Oak Ridge Dr']},
-  {label:'Offer Prep', color:'#bb653b', items:['117 Pine St']},
-  {label:'Under Contract', color:'#6daa45', items:[]},
-  {label:'Closed / Dead', color:'#797876', items:[]}
+  {label:'New Lead',       color:'#5591c7', match:['Watching','New','New Lead']},
+  {label:'Analyzing',      color:'#e8af34', match:['Analyzing']},
+  {label:'Offer Prep',     color:'#bb653b', match:['Offer Prep','Contacted']},
+  {label:'Under Contract', color:'#6daa45', match:['Under Contract']},
+  {label:'Closed / Dead',  color:'#797876', match:['Closed','Dead']}
 ];
 
 var typeBadge = {REO:'bb', FSBO:'bo', 'Price Cut':'br', 'Pre-Fore':'bw', 'Coming Soon':'bt', 'Early Access':'bp', Other:'bgr'};
@@ -427,7 +466,8 @@ var kwData = [
   ['cash only','cash preferred','quick close preferred','no repairs','sold as-is','investor opportunity','flip potential','below market','priced to sell','owner financing']
 ];
 var kwIds = ['kc0','kc1','kc2','kc3'];
-var selKW = [];
+var selKW = lsLoad(LS_SELKW, []);
+if (!Array.isArray(selKW)) selKW = [];
 
 var aiPrompts = [
   {label:'Fixer-Upper Under Budget', p:'Show me fixer-uppers under $300k in [YOUR CITY] that need work and have been listed more than 60 days'},
@@ -461,8 +501,14 @@ window.nav = function(p, el) {
 
 window.toggleTheme = function() {
   var h = document.documentElement;
-  h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  var next = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  h.setAttribute('data-theme', next);
+  lsSave(LS_THEME, next);
 };
+(function applyStoredTheme(){
+  var t = lsLoad(LS_THEME, null);
+  if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+})();
 
 function renderChecklist() {
   var el = document.getElementById('checklist');
@@ -479,8 +525,11 @@ function renderChecklist() {
 }
 
 window.chk = function(i, el) {
+  showSaving();
   checkDone[i] = el.checked;
+  lsSave(LS_CHECKS, checkDone);
   renderChecklist();
+  showSaved();
 };
 
 function renderLeads() {
@@ -511,13 +560,16 @@ function renderLeads() {
 }
 
 window.noteChg = function(el) {
+  showSaving();
   var id = parseInt(el.getAttribute('data-id'));
   for (var i = 0; i < leads.length; i++) {
     if (leads[i].id === id) { leads[i].notes = el.value; break; }
   }
+  persistLeads();
 };
 
 window.rmLead = function(btn) {
+  showSaving();
   var id = parseInt(btn.getAttribute('data-id'));
   var next = [];
   for (var i = 0; i < leads.length; i++) {
@@ -525,26 +577,37 @@ window.rmLead = function(btn) {
   }
   leads = next;
   renderLeads();
+  renderWorkflow();
+  persistLeads();
   toast('Lead removed');
 };
 
 window.addLead = function() {
+  showSaving();
   leads.push({id:nid++, addr:'New Address', type:'Other', price:'$0', dom:0, status:'Watching', notes:'', link:'https://www.redfin.com'});
   renderLeads();
+  renderWorkflow();
+  persistLeads();
   toast('Lead added - edit inline');
 };
 
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function renderWorkflow() {
   var el = document.getElementById('wfboard');
   if (!el) return;
   var h = '';
   for (var i = 0; i < stages.length; i++) {
     var s = stages[i];
+    var items = [];
+    for (var k = 0; k < leads.length; k++) {
+      if (s.match.indexOf(leads[k].status) > -1) items.push(leads[k]);
+    }
     h += '<div class="wc">';
-    h += '<div class="wch" style="color:' + s.color + '">' + s.label + ' (' + s.items.length + ')</div>';
+    h += '<div class="wch" style="color:' + s.color + '">' + esc(s.label) + ' (' + items.length + ')</div>';
     h += '<div class="wil">';
-    for (var j = 0; j < s.items.length; j++) {
-      h += '<div class="wi"><div class="wit">' + s.items[j] + '</div><div class="wis">' + s.label + '</div></div>';
+    for (var j = 0; j < items.length; j++) {
+      var addrShort = (items[j].addr || '').split(',')[0];
+      h += '<div class="wi"><div class="wit">' + esc(addrShort) + '</div><div class="wis">' + esc(items[j].status || s.label) + '</div></div>';
     }
     h += '</div></div>';
   }
@@ -643,6 +706,7 @@ window.toggleKW = function(el) {
   var idx = selKW.indexOf(kw);
   if (idx > -1) { selKW.splice(idx, 1); el.classList.remove('on'); }
   else { selKW.push(kw); el.classList.add('on'); }
+  lsSave(LS_SELKW, selKW);
   updateKWout();
 };
 
@@ -658,7 +722,7 @@ function updateKWout() {
   }
 }
 
-window.clearKW = function() { selKW = []; renderKeywords(); };
+window.clearKW = function() { selKW = []; lsSave(LS_SELKW, selKW); renderKeywords(); };
 window.copyKW = function() {
   if (!selKW.length) { toast('No keywords selected'); return; }
   cpText(selKW.join(' OR '));
@@ -686,6 +750,104 @@ function fallbackCopy(text) {
   catch (e) { toast('Select and copy manually'); }
   document.body.removeChild(ta);
 }
+
+// Lenient CSV parser handling quoted fields w/ embedded commas, quotes, newlines
+function parseCSV(text) {
+  var rows = [];
+  var cur = [];
+  var field = '';
+  var inQuotes = false;
+  var i = 0;
+  text = text.replace(/^﻿/, '');
+  while (i < text.length) {
+    var c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i+1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if (c === '"') { inQuotes = true; i++; continue; }
+    if (c === ',') { cur.push(field); field = ''; i++; continue; }
+    if (c === '\r') { i++; continue; }
+    if (c === '\n') { cur.push(field); rows.push(cur); cur = []; field = ''; i++; continue; }
+    field += c; i++;
+  }
+  if (field.length > 0 || cur.length > 0) { cur.push(field); rows.push(cur); }
+  return rows.filter(function(r){return r.length>1 || (r.length===1 && r[0].trim()!=='');});
+}
+
+window.importCSV = function(input) {
+  var f = input.files && input.files[0];
+  if (!f) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var rows = parseCSV(String(ev.target.result || ''));
+      if (!rows.length) { toast('CSV is empty'); input.value=''; return; }
+      var header = rows[0].map(function(h){return String(h||'').trim().toLowerCase();});
+      function idx(names) {
+        for (var n = 0; n < names.length; n++) {
+          var k = header.indexOf(names[n]);
+          if (k > -1) return k;
+        }
+        return -1;
+      }
+      var iAddr   = idx(['address','addr','property','street']);
+      var iSource = idx(['source','type','listing type','category']);
+      var iStatus = idx(['status','stage','state']);
+      var iNotes  = idx(['notes','note','comment','comments']);
+      var iPrice  = idx(['price','asking','list price']);
+      var iDom    = idx(['dom','days on market','days']);
+      var iLink   = idx(['link','url','listing']);
+      var imported = 0;
+      for (var r = 1; r < rows.length; r++) {
+        var row = rows[r];
+        if (!row || (row.length === 1 && !row[0].trim())) continue;
+        var addr = iAddr   > -1 ? (row[iAddr]   || '').trim() : '';
+        var src  = iSource > -1 ? (row[iSource] || '').trim() : 'Other';
+        var st   = iStatus > -1 ? (row[iStatus] || '').trim() : 'Watching';
+        var nt   = iNotes  > -1 ? (row[iNotes]  || '').trim() : '';
+        var pr   = iPrice  > -1 ? (row[iPrice]  || '').trim() : '';
+        var dm   = iDom    > -1 ? parseInt((row[iDom] || '0').replace(/[^\d-]/g,''),10) : 0;
+        var lk   = iLink   > -1 ? (row[iLink]   || '').trim() : 'https://www.redfin.com';
+        if (!addr && !nt && !src) continue;
+        leads.push({
+          id: nid++,
+          addr: addr || '(no address)',
+          type: src || 'Other',
+          price: pr || '$0',
+          dom: isNaN(dm) ? 0 : dm,
+          status: st || 'Watching',
+          notes: nt,
+          link: lk || 'https://www.redfin.com'
+        });
+        imported++;
+      }
+      persistLeads();
+      renderLeads();
+      renderWorkflow();
+      toast('Imported ' + imported + ' lead' + (imported===1?'':'s'));
+    } catch (e) {
+      toast('CSV parse failed');
+    }
+    input.value = '';
+  };
+  reader.onerror = function() { toast('Could not read file'); input.value=''; };
+  reader.readAsText(f);
+};
+
+window.clearAllLeads = function() {
+  if (!confirm('Delete all leads? This cannot be undone.')) return;
+  showSaving();
+  leads = [];
+  nid = 1;
+  persistLeads();
+  renderLeads();
+  renderWorkflow();
+  toast('All leads cleared');
+};
 
 window.exportCSV = function() {
   var rows = [['Address','Type','Price','DOM','Status','Notes']];
@@ -717,6 +879,12 @@ renderLeads();
 renderWorkflow();
 renderKeywords();
 renderAI();
+if (leads.length || Object.keys(checkDone).length || selKW.length) {
+  showSaved();
+} else {
+  var ss = document.getElementById('saveStatus');
+  if (ss) ss.textContent = 'No saved data yet';
+}
 
 })();
 </script>
